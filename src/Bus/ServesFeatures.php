@@ -21,8 +21,15 @@ trait ServesFeatures
      */
     public function serve($feature, $arguments = [])
     {
+        /**
+         * Laravel change the behaviour of the dispatch after the release of 10.0.0 and we have to explictly handle this run method
+         * https://github.com/laravel/framework/commit/5f61fd1af0fa0b37a8888637578459eae21faeb
+         * @author Nay Thu Khant (naythukhant644@gmail.com)
+         *
+         */
+        $method = app()->version() >= "10.0.0" ? "dispatchSync" : "dispatch";
         event(new FeatureStarted($feature, $arguments));
 
-        return $this->dispatch($this->marshal($feature, new Collection(), $arguments));
+        return $this->{$method}($this->marshal($feature, new Collection(), $arguments));
     }
 }
