@@ -34,10 +34,17 @@ trait UnitDispatcher
      */
     public function run($unit, $arguments = [], $extra = [])
     {
+        /**
+         * Laravel change the behaviour of the dispatch after the release of 10.0.0 and we have to explictly handle this run method
+         * https://github.com/laravel/framework/commit/5f61fd1af0fa0b37a8888637578459eae21faeb
+         * @author Nay Thu Khant (naythukhant644@gmail.com)
+         *
+         */
+        $method = app()->version() >= "10.0.0" ? "dispatchSync" : "dispatch";
         if (is_object($unit) && !App::runningUnitTests()) {
-            $result = $this->dispatch($unit);
+            $result = $this->{$method}($unit);
         } elseif ($arguments instanceof Request) {
-            $result = $this->dispatch($this->marshal($unit, $arguments, $extra));
+            $result = $this->{$method}($this->marshal($unit, $arguments, $extra));
         } else {
             if (!is_object($unit)) {
                 $unit = $this->marshal($unit, new Collection(), $arguments);
@@ -58,7 +65,7 @@ trait UnitDispatcher
                 );
             }
 
-            $result = $this->dispatch($unit);
+            $result = $this->{$method}($unit);
         }
 
         if ($unit instanceof Operation) {
